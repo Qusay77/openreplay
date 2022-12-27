@@ -1,57 +1,66 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import cn from 'classnames';
-import { Icon } from 'UI';
-import { List, AutoSizer, CellMeasurer, CellMeasurerCache } from "react-virtualized";
+import { List, AutoSizer, CellMeasurer, CellMeasurerCache } from 'react-virtualized';
 import { TYPES } from 'Types/session/event';
 import { setSelected } from 'Duck/events';
 import { setEventFilter } from 'Duck/sessions';
 import { show as showTargetDefiner } from 'Duck/components/targetDefiner';
+import UserCard from './UserCard';
 import EventGroupWrapper from './EventGroupWrapper';
-import styles from './eventsBlock.module.css';
+import styles from './eventsBlock.module.scss';
 import EventSearch from './EventSearch/EventSearch';
+import { Checkbox } from 'UI';
 
-@connect(state => ({
-  session: state.getIn([ 'sessions', 'current' ]),
-  filteredEvents: state.getIn([ 'sessions', 'filteredEvents' ]),
-  eventsIndex: state.getIn([ 'sessions', 'eventsIndex' ]),
-  selectedEvents: state.getIn([ 'events', 'selected' ]),
-  targetDefinerDisplayed: state.getIn([ 'components', 'targetDefiner', 'isDisplayed' ]),
-  testsAvaliable: false,
-}), {
-  showTargetDefiner,
-  setSelected,
-  setEventFilter
-})
+@connect(
+  (state) => ({
+    session: state.getIn(['sessions', 'current']),
+    filteredEvents: state.getIn(['sessions', 'filteredEvents']),
+    eventsIndex: state.getIn(['sessions', 'eventsIndex']),
+    selectedEvents: state.getIn(['events', 'selected']),
+    targetDefinerDisplayed: state.getIn(['components', 'targetDefiner', 'isDisplayed']),
+    testsAvaliable: false,
+  }),
+  {
+    showTargetDefiner,
+    setSelected,
+    setEventFilter,
+  }
+)
 export default class EventsBlock extends React.PureComponent {
   state = {
     editingEvent: null,
     mouseOver: false,
-    query: ''
-  }
+    query: '',
+    filterType: {
+      pages: true,
+      Interactions: false,
+    },
+  };
 
   scroller = React.createRef();
   cache = new CellMeasurerCache({
     fixedWidth: true,
-    defaultHeight: 300
+    defaultHeight: 300,
   });
 
   write = ({ target: { value, name } }) => {
     const { filter } = this.state;
-    this.setState({ query: value })
-    this.props.setEventFilter({ query: value, filter })
+    this.setState({ query: value });
+
+    this.props.setEventFilter({ query: value, filter });
 
     setTimeout(() => {
       if (!this.scroller.current) return;
 
       this.scroller.current.scrollToRow(0);
-    }, 100)
-  }
+    }, 100);
+  };
 
   clearSearch = () => {
     const { filter } = this.state;
-    this.setState({ query: '' })
-    this.props.setEventFilter({ query: '', filter })
+    this.setState({ query: '' });
+    this.props.setEventFilter({ query: '', filter });
 
     this.scroller.current.forceUpdateGrid();
 
@@ -59,27 +68,30 @@ export default class EventsBlock extends React.PureComponent {
       if (!this.scroller.current) return;
 
       this.scroller.current.scrollToRow(0);
-    }, 100)
-  }
+    }, 100);
+  };
 
   onSetEventFilter = (e, { name, value }) => {
     const { query } = this.state;
-    this.setState({ filter: value })
+    this.setState({ filter: value });
     this.props.setEventFilter({ filter: value, query });
-  }
+  };
 
   componentDidUpdate(prevProps) {
     if (prevProps.targetDefinerDisplayed && !this.props.targetDefinerDisplayed) {
       this.setState({ editingEvent: null });
     }
-    if (prevProps.session !== this.props.session) { // Doesn't happen
+    if (prevProps.session !== this.props.session) {
+      // Doesn't happen
       this.cache = new CellMeasurerCache({
         fixedWidth: true,
-        defaultHeight: 300
+        defaultHeight: 300,
       });
     }
-    if (prevProps.currentTimeEventIndex !== this.props.currentTimeEventIndex &&
-        this.scroller.current !== null) {
+    if (
+      prevProps.currentTimeEventIndex !== this.props.currentTimeEventIndex &&
+      this.scroller.current !== null
+    ) {
       this.scroller.current.forceUpdateGrid();
       if (!this.state.mouseOver) {
         this.scroller.current.scrollToRow(this.props.currentTimeEventIndex);
@@ -118,12 +130,14 @@ export default class EventsBlock extends React.PureComponent {
     this.props.setSelected(newSelectedSet);
   }
 
-  onEventClick = (e, event) => this.props.player.jump(event.time)
+  onEventClick = (e, event) => {
+    this.props.player.jump(event.time - 2000 < 0 ? 0 : event.time - 2000);
+  };
 
-  onMouseOver = () => this.setState({ mouseOver: true })
-  onMouseLeave = () => this.setState({ mouseOver: false })
+  onMouseOver = () => this.setState({ mouseOver: true });
+  onMouseLeave = () => this.setState({ mouseOver: false });
 
-  renderGroup = ({ index, key, style, parent }) => {
+  renderGroup = ({ index, key, style, parent }, filter) => {
     const {
       session: { events },
       selectedEvents,
@@ -131,109 +145,153 @@ export default class EventsBlock extends React.PureComponent {
       testsAvaliable,
       playing,
       eventsIndex,
-      filteredEvents
+      filteredEvents,
     } = this.props;
     const { query } = this.state;
-    const _events = filteredEvents || events;
+    const t_events = filteredEvents || events;
+    const interactions = t_events.filter((e) => e.type === TYPES.INPUT || e.type === TYPES.CLICK);
+    const pages = t_events.filter((e) => !(e.type === TYPES.INPUT || e.type === TYPES.CLICK));
+    const _events =
+      Object.values(filter).filter((e) => e).length === 1
+        ? (filter.Interactions && interactions) || (filter.pages && pages)
+        : t_events;
+
     const isLastEvent = index === _events.size - 1;
-    const isLastInGroup = isLastEvent || _events.get(index + 1).type === TYPES.LOCATION;
+    const isLastInGroup =
+      isLastEvent || (_events.get(index + 1) && _events.get(index + 1).type === TYPES.LOCATION);
     const event = _events.get(index);
     const isSelected = selectedEvents.includes(event);
     const isCurrent = index === currentTimeEventIndex;
     const isEditing = this.state.editingEvent === event;
-
-    const heightBug = index === 0 && event.type === TYPES.LOCATION && event.referrer ? { top: 2 } : {}
     return (
-      <CellMeasurer
-        key={key}
-        cache={this.cache}
-        parent={parent}
-        rowIndex={index}
-      >
-        {({measure, registerChild}) => (
-          <div style={{ ...style, ...heightBug }} ref={registerChild}>
+      <CellMeasurer key={key} cache={this.cache} parent={parent} rowIndex={index}>
+        {({ measure, registerChild }) => (
+          <div style={style} ref={registerChild}>
             <EventGroupWrapper
               query={query}
               presentInSearch={eventsIndex.includes(index)}
-              isFirst={index==0}
+              isFirst={index == 0}
               mesureHeight={measure}
-              onEventClick={ this.onEventClick }
-              onCheckboxClick={ this.onCheckboxClick }
-              event={ event }
-              isLastEvent={ isLastEvent }
-              isLastInGroup={ isLastInGroup }
-              isSelected={ isSelected }
-              isCurrent={ isCurrent }
-              isEditing={ isEditing }
-              showSelection={ testsAvaliable && !playing }
+              filter={filter}
+              onEventClick={this.onEventClick}
+              onCheckboxClick={this.onCheckboxClick}
+              event={event}
+              isLastEvent={isLastEvent}
+              isLastInGroup={isLastInGroup}
+              isSelected={isSelected}
+              isCurrent={isCurrent}
+              isEditing={isEditing}
+              showSelection={testsAvaliable && !playing}
             />
           </div>
         )}
       </CellMeasurer>
     );
-  }
+  };
 
   render() {
     const { query } = this.state;
     const {
-      testsAvaliable,
-      session: {
-        events,
-      },
+      session: { events, userNumericHash, userDisplayName, userId, revId, userAnonymousId },
       filteredEvents,
-      setActiveTab,
     } = this.props;
 
-    const _events = filteredEvents || events;
-
-    const isEmptySearch = query && (_events.size === 0 || !_events)
+    const t_events = filteredEvents || events;
+    const interactions = t_events.filter((e) => e.type === TYPES.INPUT || e.type === TYPES.CLICK);
+    const pages = t_events.filter((e) => !(e.type === TYPES.INPUT || e.type === TYPES.CLICK));
+    const _events =
+      Object.values(this.state.filterType).filter((e) => e).length === 1
+        ? (this.state.filterType.Interactions && interactions) ||
+          (this.state.filterType.pages && pages)
+        : t_events;
     return (
-      <>
-        <div className={ cn(styles.header, 'p-4') }>
-          <div className={ cn(styles.hAndProgress, 'mt-3') }>
+      <div style={{ width: 270, height: 'calc(100vh - 270px)' }}>
+        <div className={cn(styles.header, 'p-3')}>
+          <UserCard
+            className=""
+            userNumericHash={userNumericHash}
+            userDisplayName={userDisplayName}
+            userId={userId}
+            revId={revId}
+            userAnonymousId={userAnonymousId}
+          />
+
+          <div className={cn(styles.hAndProgress, 'mt-3')}>
             <EventSearch
               onChange={this.write}
               clearSearch={this.clearSearch}
-              setActiveTab={setActiveTab}
               value={query}
-              header={
-                <div className="text-xl">User Actions <span className="color-gray-medium">{ events.size }</span></div>
-              }
+              header={<div className="text-lg">{`User Events (${_events.size})`}</div>}
             />
           </div>
         </div>
         <div
-          className={ cn("flex-1 px-4 pb-4", styles.eventsList) }
+          style={{
+            display: 'flex',
+            justifyContent: 'flex-start',
+            alignItems: 'center',
+            padding: '0.75rem',
+          }}
+        >
+          <Checkbox
+            name="pages"
+            className="font-medium mr-8"
+            style={{ marginTop: -1 }}
+            type="checkbox"
+            checked={this.state.filterType['pages']}
+            onClick={(e) =>
+              this.setState({
+                filterType: {
+                  ...this.state.filterType,
+                  pages: !this.state.filterType.pages,
+                },
+              })
+            }
+            label="Pages"
+          />
+          <Checkbox
+            name="Interactions"
+            className="font-medium mr-8"
+            style={{ marginTop: -1 }}
+            type="checkbox"
+            checked={this.state.filterType['Interactions']}
+            onClick={(e) =>
+              this.setState({
+                filterType: {
+                  ...this.state.filterType,
+                  Interactions: !this.state.filterType.Interactions,
+                },
+              })
+            }
+            label="Interactions"
+          />
+        </div>
+        <div
+          className={cn('flex-1 px-3 pb-3', styles.eventsList)}
           id="eventList"
           data-openreplay-masked
-          onMouseOver={ this.onMouseOver }
-          onMouseLeave={ this.onMouseLeave }
+          onMouseOver={this.onMouseOver}
+          onMouseLeave={this.onMouseLeave}
         >
-          {isEmptySearch && (
-            <div className='flex items-center'>
-              <Icon name="binoculars" size={18} />
-              <span className='ml-2'>No Matching Results</span>
-            </div>
-          )}
           <AutoSizer disableWidth>
             {({ height }) => (
               <List
                 ref={this.scroller}
-                className={ styles.eventsList }
-                height={height + 10}
+                className={styles.eventsList}
+                height={height}
                 width={248}
                 overscanRowCount={6}
                 itemSize={230}
                 rowCount={_events.size}
                 deferredMeasurementCache={this.cache}
                 rowHeight={this.cache.rowHeight}
-                rowRenderer={this.renderGroup}
+                rowRenderer={(d) => this.renderGroup(d, this.state.filterType)}
                 scrollToAlignment="start"
               />
             )}
           </AutoSizer>
         </div>
-      </>
+      </div>
     );
   }
 }

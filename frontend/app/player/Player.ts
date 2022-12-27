@@ -1,6 +1,8 @@
 import { goTo as listsGoTo } from './lists';
 import { update, getState } from './store';
-import MessageDistributor, { INITIAL_STATE as SUPER_INITIAL_STATE }  from './MessageDistributor/MessageDistributor';
+import MessageDistributor, {
+  INITIAL_STATE as SUPER_INITIAL_STATE,
+} from './MessageDistributor/MessageDistributor';
 
 const fps = 60;
 const performance = window.performance || { now: Date.now.bind(Date) };
@@ -14,7 +16,10 @@ const requestAnimationFrame =
   window.oRequestAnimationFrame ||
   // @ts-ignore
   window.msRequestAnimationFrame ||
-  ((callback: (args: any) => void) => window.setTimeout(() => { callback(performance.now()); }, 1000 / fps));
+  ((callback: (args: any) => void) =>
+    window.setTimeout(() => {
+      callback(performance.now());
+    }, 1000 / fps));
 const cancelAnimationFrame =
   window.cancelAnimationFrame ||
   // @ts-ignore
@@ -23,14 +28,13 @@ const cancelAnimationFrame =
 
 const HIGHEST_SPEED = 16;
 
-
-const SPEED_STORAGE_KEY = "__$player-speed$__";
-const SKIP_STORAGE_KEY = "__$player-skip$__";
-const SKIP_TO_ISSUE_STORAGE_KEY = "__$session-skipToIssue$__";
-const AUTOPLAY_STORAGE_KEY = "__$player-autoplay$__";
-const SHOW_EVENTS_STORAGE_KEY = "__$player-show-events$__";
-const storedSpeed: number = parseInt(localStorage.getItem(SPEED_STORAGE_KEY) || "") ;
-const initialSpeed = [1,2,4,8,16].includes(storedSpeed) ? storedSpeed : 1;
+const SPEED_STORAGE_KEY = '__$player-speed$__';
+const SKIP_STORAGE_KEY = '__$player-skip$__';
+const SKIP_TO_ISSUE_STORAGE_KEY = '__$session-skipToIssue$__';
+const AUTOPLAY_STORAGE_KEY = '__$player-autoplay$__';
+const SHOW_EVENTS_STORAGE_KEY = '__$player-show-events$__';
+const storedSpeed: number = parseInt(localStorage.getItem(SPEED_STORAGE_KEY) || '');
+const initialSpeed = [1, 2, 4, 8, 16].includes(storedSpeed) ? storedSpeed : 1;
 const initialSkip = localStorage.getItem(SKIP_STORAGE_KEY) === 'true';
 const initialSkipToIssue = localStorage.getItem(SKIP_TO_ISSUE_STORAGE_KEY) === 'true';
 const initialAutoplay = localStorage.getItem(AUTOPLAY_STORAGE_KEY) === 'true';
@@ -48,14 +52,13 @@ export const INITIAL_STATE = {
   liveTimeTravel: false,
 } as const;
 
-
 export const INITIAL_NON_RESETABLE_STATE = {
   skip: initialSkip,
   skipToIssue: initialSkipToIssue,
   autoplay: initialAutoplay,
   speed: initialSpeed,
   showEvents: initialShowEvents,
-}
+};
 
 export default class Player extends MessageDistributor {
   private _animationFrameRequestId: number = 0;
@@ -87,13 +90,14 @@ export default class Player extends MessageDistributor {
         cssLoading,
       } = getState();
 
-      const diffTime = messagesLoading || cssLoading || disconnected
-        ? 0
-        : Math.max(animationCurrentTime - animationPrevTime, 0) * (live ? 1 : speed);
+      const diffTime =
+        messagesLoading || cssLoading || disconnected
+          ? 0
+          : Math.max(animationCurrentTime - animationPrevTime, 0) * (live ? 1 : speed);
 
       let time = prevTime + diffTime;
 
-      const skipInterval = !live && skip && skipIntervals.find((si: Node) => si.contains(time));  // TODO: good skip by messages
+      const skipInterval = !live && skip && skipIntervals.find((si: Node) => si.contains(time)); // TODO: good skip by messages
       if (skipInterval) time = skipInterval.end;
 
       const fmt = super.getFirstMessageTime();
@@ -124,7 +128,7 @@ export default class Player extends MessageDistributor {
       if (live && time - endTime > 100) {
         update({
           endTime: time,
-          livePlay: endTime - time < 900
+          livePlay: endTime - time < 900,
         });
       }
       this._setTime(time);
@@ -141,7 +145,7 @@ export default class Player extends MessageDistributor {
 
   pause() {
     cancelAnimationFrame(this._animationFrameRequestId);
-    update({ playing: false })
+    update({ playing: false });
   }
 
   togglePlay() {
@@ -163,16 +167,16 @@ export default class Player extends MessageDistributor {
     if (getState().playing) {
       cancelAnimationFrame(this._animationFrameRequestId);
       // this._animationFrameRequestId = requestAnimationFrame(() => {
-        this._setTime(time, index);
-        this._startAnimation();
-        // throttilg the redux state update from each frame to nearly half a second
-        // which is better for performance and component rerenders
-        update({ livePlay: Math.abs(time - endTime) < 500 });
+      this._setTime(time, index);
+      this._startAnimation();
+      // throttilg the redux state update from each frame to nearly half a second
+      // which is better for performance and component rerenders
+      update({ livePlay: Math.abs(time - endTime) < 500 });
       //});
     } else {
       //this._animationFrameRequestId = requestAnimationFrame(() => {
-        this._setTime(time, index);
-        update({ livePlay: Math.abs(time - endTime) < 500 });
+      this._setTime(time, index);
+      update({ livePlay: Math.abs(time - endTime) < 500 });
       //});
     }
   }
@@ -199,7 +203,7 @@ export default class Player extends MessageDistributor {
     }
   }
 
-  markTargets(targets: { selector: string, count: number }[] | null) {
+  markTargets(targets: { selector: string; count: number }[] | null) {
     this.pause();
     this.setMarkedTargets(targets);
   }
@@ -228,6 +232,7 @@ export default class Player extends MessageDistributor {
 
   toggleEvents(shouldShow?: boolean) {
     const showEvents = shouldShow || !getState().showEvents;
+    console.log(showEvents);
     localStorage.setItem(SHOW_EVENTS_STORAGE_KEY, `${showEvents}`);
     update({ showEvents });
   }
@@ -249,12 +254,12 @@ export default class Player extends MessageDistributor {
 
   speedDown() {
     const { speed } = getState();
-    this._updateSpeed(Math.max(1, speed/2));
+    this._updateSpeed(Math.max(1, speed / 2));
   }
 
   async toggleTimetravel() {
     if (!getState().liveTimeTravel) {
-      return await this.reloadWithUnprocessedFile()
+      return await this.reloadWithUnprocessedFile();
     }
   }
 
@@ -266,7 +271,7 @@ export default class Player extends MessageDistributor {
   }
 
   toggleUserName(name?: string) {
-    this.cursor.toggleUserName(name)
+    this.cursor.toggleUserName(name);
   }
 
   clean() {

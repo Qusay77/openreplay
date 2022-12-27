@@ -2,18 +2,13 @@
   width: 270px;
   /* padding: 0 10px; */
   margin-bottom: 5px;
-}
-.panel {
-  width: 270px;
-  min-width: 270px;
-  height: calc(100vh - 50px);
-  align-self: flex-end;
+  height: fit-content;
 }
 
 .header {
   /* height: 40px; */
   /* margin-bottom: 15px; */
-  padding-left: 2px;
+  // padding-left: 2px;
   /* padding-right: 0px; */
 
   & .hAndProgress {
@@ -44,6 +39,8 @@
 .eventsList {
   /* box-shadow: inset 0px 2px 4px rgba(0, 0, 0, 0.1); */
   /* border-top: solid thin $gray-light-shade; */
+  height: 100%;
+
   &::-webkit-scrollbar {
     width: 2px;
     background: transparent !important;
@@ -73,6 +70,6 @@
 .sessionDetails {
   display: flex;
   font-size: 10px;
-  color: $gray-medium;
+  color: rgb(128, 128, 128);
   justify-content: space-between;
 }

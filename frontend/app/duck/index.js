@@ -3,6 +3,7 @@ import { combineReducers } from 'redux-immutable';
 import jwt from './jwt';
 import user from './user';
 import sessions from './sessions';
+import permission from './permission';
 import issues from './issues';
 import assignments from './assignments';
 import target from './target';
@@ -60,7 +61,7 @@ export default combineReducers({
   notifications,
   dashboard,
   components,
-  members,  
+  members,
   site,
   customFields,
   webhooks,
@@ -74,6 +75,7 @@ export default combineReducers({
   customMetrics,
   search,
   liveSearch,
+  permission,
   ...integrations,
   ...sources,
 });

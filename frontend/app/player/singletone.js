@@ -5,21 +5,22 @@ import { clean as cleanLists } from './lists';
 /** @type {Player} */
 let instance = null;
 
-const initCheck = method => (...args) => {
-  if (instance === null) {
-    console.error("Player method called before Player have been initialized.");
-    return;
-  }
-  return method(...args);
-}
-
+const initCheck =
+  (method) =>
+  (...args) => {
+    if (instance === null) {
+      console.error('Player method called before Player have been initialized.');
+      return;
+    }
+    return method(...args);
+  };
 
 let autoPlay = true;
-document.addEventListener("visibilitychange", function() {
+document.addEventListener('visibilitychange', function () {
   if (instance === null) return;
   if (document.hidden) {
     const { playing } = getState();
-    autoPlay = playing
+    autoPlay = playing;
     if (playing) {
       instance.pause();
     }
@@ -70,20 +71,28 @@ export const markElement = initCheck((...args) => instance.marker && instance.ma
 export const scale = initCheck(() => instance.scale());
 export const toggleInspectorMode = initCheck((...args) => instance.toggleInspectorMode(...args));
 /** @type {Player.assistManager.call} */
-export const callPeer = initCheck((...args) => instance.assistManager.call(...args))
+export const callPeer = initCheck((...args) => instance.assistManager.call(...args));
 /** @type {Player.assistManager.setCallArgs} */
-export const setCallArgs = initCheck((...args) => instance.assistManager.setCallArgs(...args))
+export const setCallArgs = initCheck((...args) => instance.assistManager.setCallArgs(...args));
 /** @type {Player.assistManager.initiateCallEnd} */
-export const initiateCallEnd = initCheck((...args) => instance.assistManager.initiateCallEnd(...args))
-export const requestReleaseRemoteControl = initCheck((...args) => instance.assistManager.requestReleaseRemoteControl(...args))
-export const releaseRemoteControl = initCheck((...args) => instance.assistManager.releaseRemoteControl(...args))
-export const markTargets = initCheck((...args) => instance.markTargets(...args))
-export const activeTarget = initCheck((...args) => instance.activeTarget(...args))
-export const toggleAnnotation = initCheck((...args) => instance.assistManager.toggleAnnotation(...args))
+export const initiateCallEnd = initCheck((...args) =>
+  instance.assistManager.initiateCallEnd(...args)
+);
+export const requestReleaseRemoteControl = initCheck((...args) =>
+  instance.assistManager.requestReleaseRemoteControl(...args)
+);
+export const releaseRemoteControl = initCheck((...args) =>
+  instance.assistManager.releaseRemoteControl(...args)
+);
+export const markTargets = initCheck((...args) => instance.markTargets(...args));
+export const activeTarget = initCheck((...args) => instance.activeTarget(...args));
+export const toggleAnnotation = initCheck((...args) =>
+  instance.assistManager.toggleAnnotation(...args)
+);
 /** @type {Player.toggleTimetravel} */
-export const toggleTimetravel = initCheck((...args) => instance.toggleTimetravel(...args))
-export const jumpToLive = initCheck((...args) => instance.jumpToLive(...args))
-export const toggleUserName = initCheck((...args) => instance.toggleUserName(...args))
+export const toggleTimetravel = initCheck((...args) => instance.toggleTimetravel(...args));
+export const jumpToLive = initCheck((...args) => instance.jumpToLive(...args));
+export const toggleUserName = initCheck((...args) => instance.toggleUserName(...args));
 
 export const Controls = {
   jump,
@@ -97,5 +106,5 @@ export const Controls = {
   toggleSpeed,
   speedUp,
   speedDown,
-  callPeer
-}
+  callPeer,
+};
