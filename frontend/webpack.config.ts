@@ -102,6 +102,9 @@ const config: Configuration = {
     alias: pathAlias,
     fallback: {
       assert: false,
+      stream: require.resolve('stream-browserify'),
+      buffer: require.resolve('buffer'),
+      'process/browser': require.resolve('process/browser'),
     },
   },
   plugins: [
@@ -118,6 +121,12 @@ const config: Configuration = {
       patterns: [{ from: './app/assets', to: 'assets' }],
     }),
     new MiniCssExtractPlugin(),
+    new webpack.ProvidePlugin({
+      Buffer: ['buffer', 'Buffer'],
+    }),
+    new webpack.ProvidePlugin({
+      process: 'process/browser',
+    }),
   ],
   devtool: isDevelopment ? 'inline-source-map' : false,
   performance: {
