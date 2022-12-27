@@ -2,86 +2,28 @@ import React, { lazy, Suspense } from 'react';
 import { Switch, Route, Redirect } from 'react-router';
 import { BrowserRouter, withRouter } from 'react-router-dom';
 import { connect } from 'react-redux';
-import { Notification } from 'UI';
 import { Loader } from 'UI';
 import { fetchUserInfo } from 'Duck/user';
 import withSiteIdUpdater from 'HOCs/withSiteIdUpdater';
-import WidgetViewPure from 'Components/Dashboard/components/WidgetView';
-import Header from 'Components/Header/Header';
 import { fetchList as fetchSiteList } from 'Duck/site';
 import { fetchList as fetchAnnouncements } from 'Duck/announcements';
 import { fetchList as fetchAlerts } from 'Duck/alerts';
 import { withStore } from 'App/mstore';
-
-import APIClient from './api_client';
 import * as routes from './routes';
-import { OB_DEFAULT_TAB, isRoute } from 'App/routes';
-import Signup from './components/Signup/Signup';
 import { fetchTenants } from 'Duck/user';
 import { setSessionPath } from 'Duck/sessions';
 import { ModalProvider } from './components/Modal';
 import { GLOBAL_DESTINATION_PATH } from 'App/constants/storageKeys';
-import SupportCallout from 'Shared/SupportCallout';
 import IframeComponent from './components/IframeComponent/IframeComponent.jsx';
 import BlankComponent from './components/IframeComponent/blank.jsx';
 
-const Login = lazy(() => import('Components/Login/Login'));
-const ForgotPassword = lazy(() => import('Components/ForgotPassword/ForgotPassword'));
-const UpdatePassword = lazy(() => import('Components/UpdatePassword/UpdatePassword'));
 const SessionPure = lazy(() => import('Components/Session/Session'));
-const LiveSessionPure = lazy(() => import('Components/Session/LiveSession'));
-const OnboardingPure = lazy(() => import('Components/Onboarding/Onboarding'));
-const ClientPure = lazy(() => import('Components/Client/Client'));
-const AssistPure = lazy(() => import('Components/Assist'));
-const BugFinderPure = lazy(() => import('Components/Overview'));
-const DashboardPure = lazy(() => import('Components/Dashboard/NewDashboard'));
-const ErrorsPure = lazy(() => import('Components/Errors/Errors'));
-const FunnelDetailsPure = lazy(() => import('Components/Funnels/FunnelDetails'));
-const FunnelIssueDetails = lazy(() => import('Components/Funnels/FunnelIssueDetails'));
-const FunnelPagePure = lazy(() => import('Components/Funnels/FunnelPage'));
 
-const BugFinder = withSiteIdUpdater(BugFinderPure);
-const Dashboard = withSiteIdUpdater(DashboardPure);
 const Session = withSiteIdUpdater(SessionPure);
-const LiveSession = withSiteIdUpdater(LiveSessionPure);
-const Assist = withSiteIdUpdater(AssistPure);
-const Client = withSiteIdUpdater(ClientPure);
-const Onboarding = withSiteIdUpdater(OnboardingPure);
-const Errors = withSiteIdUpdater(ErrorsPure);
-const FunnelPage = withSiteIdUpdater(FunnelPagePure);
-const FunnelsDetails = withSiteIdUpdater(FunnelDetailsPure);
-const FunnelIssue = withSiteIdUpdater(FunnelIssueDetails);
+
 const withSiteId = routes.withSiteId;
 
-const METRICS_PATH = routes.metrics();
-const METRICS_DETAILS = routes.metricDetails();
-const METRICS_DETAILS_SUB = routes.metricDetailsSub();
-
-const ALERTS_PATH = routes.alerts();
-const ALERT_CREATE_PATH = routes.alertCreate();
-const ALERT_EDIT_PATH = routes.alertEdit();
-
-const DASHBOARD_PATH = routes.dashboard();
-const DASHBOARD_SELECT_PATH = routes.dashboardSelected();
-const DASHBOARD_METRIC_CREATE_PATH = routes.dashboardMetricCreate();
-const DASHBOARD_METRIC_DETAILS_PATH = routes.dashboardMetricDetails();
-
-// const WIDGET_PATAH = routes.dashboardMetric();
-const SESSIONS_PATH = routes.sessions();
-const ASSIST_PATH = routes.assist();
-const ERRORS_PATH = routes.errors();
-const ERROR_PATH = routes.error();
-const FUNNEL_PATH = routes.funnels();
-const FUNNEL_CREATE_PATH = routes.funnelsCreate();
-const FUNNEL_ISSUE_PATH = routes.funnelIssue();
 const SESSION_PATH = routes.session();
-const LIVE_SESSION_PATH = routes.liveSession();
-const LOGIN_PATH = routes.login();
-const SIGNUP_PATH = routes.signup();
-const FORGOT_PASSWORD = routes.forgotPassword();
-const CLIENT_PATH = routes.client();
-const ONBOARDING_PATH = routes.onboarding();
-const ONBOARDING_REDIRECT_PATH = routes.onboarding(OB_DEFAULT_TAB);
 
 @withStore
 @withRouter
@@ -171,24 +113,8 @@ class Router extends React.Component {
   }
 
   render() {
-    const {
-      isLoggedIn,
-      jwt,
-      siteId,
-      sites,
-      loading,
-      changePassword,
-      location,
-      existingTenant,
-      onboarding,
-      isEnterprise,
-    } = this.props;
+    const { isLoggedIn, sites, loading, location } = this.props;
     const siteIdList = sites.map(({ id }) => id).toJS();
-    const hideHeader =
-      (location.pathname && location.pathname.includes('/session/')) ||
-      location.pathname.includes('/assist/');
-    const isPlayer =
-      isRoute(SESSION_PATH, location.pathname) || isRoute(LIVE_SESSION_PATH, location.pathname);
     const url =
       location.pathname &&
       location.pathname.includes('/session/') &&
@@ -196,8 +122,6 @@ class Router extends React.Component {
     return isLoggedIn ? (
       <ModalProvider>
         <Loader loading={loading} className="flex-1">
-          {/* <Notification /> */}
-          {/* {!hideHeader && <Header key="header" />} */}
           <Suspense fallback={<Loader loading={true} className="flex-1" />}>
             <Switch key="content">
               <Route
