@@ -37,6 +37,7 @@ import PlayerControls from './components/PlayerControls';
 import styles from './controls.module.css';
 import { Tooltip } from 'react-tippy';
 import XRayButton from 'Shared/XRayButton';
+import PackageUpgradeModal from './PackagesModal.jsx';
 
 function getStorageIconName(type) {
   switch (type) {
@@ -140,8 +141,19 @@ function getStorageName(type) {
   }
 )
 export default class Controls extends React.Component {
+  state = {
+    perm: false,
+    perms: {},
+  };
   componentDidMount() {
     document.addEventListener('keydown', this.onKeyDown);
+    const permsStorage = localStorage.getItem('packagePermission');
+    if (permsStorage) {
+      const perms = permsStorage && JSON.parse(permsStorage);
+      const perm = perms?.permission;
+      this.setState({ perm, perms });
+      localStorage.removeItem('packagePermission');
+    }
   }
 
   componentWillUnmount() {
@@ -325,19 +337,20 @@ export default class Controls extends React.Component {
     };
 
     return (
-      <div className={styles.controls}>
-        <Timeline
-          live={live}
-          jump={this.props.jump}
-          liveTimeTravel={liveTimeTravel}
-          pause={this.props.pause}
-          togglePlay={this.props.togglePlay}
-        />
-        {!fullscreen && (
-          <div className={cn(styles.buttons, { '!px-5 !pt-0': live })} data-is-live={live}>
-            <div className="flex items-center">
-              {!live && (
-                <>
+      <>
+        <PackageUpgradeModal email={this.state.perms?.email} orgId={this.state.perms?.orgId} />
+        <div className={styles.controls}>
+          <Timeline
+            live={live}
+            jump={this.props.jump}
+            liveTimeTravel={liveTimeTravel}
+            pause={this.props.pause}
+            togglePlay={this.props.togglePlay}
+          />
+          {!fullscreen && (
+            <div className={cn(styles.buttons, { '!px-5 !pt-0': live })} data-is-live={live}>
+              <div className="flex items-center">
+                {!live && (
                   <PlayerControls
                     live={live}
                     skip={skip}
@@ -354,149 +367,155 @@ export default class Controls extends React.Component {
                     setSkipInterval={changeSkipInterval}
                     currentInterval={skipInterval}
                   />
-                  <div className={cn('mx-2')} />
-                  <XRayButton
-                    isActive={bottomBlock === OVERVIEW && !inspectorMode}
-                    onClick={() => toggleBottomTools(OVERVIEW)}
-                  />
-                </>
-              )}
+                )}
 
-              {live && !closedLive && (
-                <div className={styles.buttonsLeft}>
-                  <LiveTag isLive={livePlay} onClick={() => (livePlay ? null : jumpToLive())} />
-                  <div className="font-semibold px-2">
-                    <AssistDuration isLivePlay={livePlay} />
+                {live && !closedLive && (
+                  <div className={styles.buttonsLeft}>
+                    <LiveTag isLive={livePlay} onClick={() => (livePlay ? null : jumpToLive())} />
+                    <div className="font-semibold px-2">
+                      <AssistDuration isLivePlay={livePlay} />
+                    </div>
                   </div>
-                </div>
-              )}
-            </div>
+                )}
+              </div>
 
-            <div className="flex items-center h-full">
-              <ControlButton
-                disabled={disabled && !inspectorMode}
-                onClick={() => toggleBottomTools(CONSOLE)}
-                active={bottomBlock === CONSOLE && !inspectorMode}
-                label="CONSOLE"
-                noIcon
-                labelClassName="!text-base font-semibold"
-                count={logCount}
-                hasErrors={logRedCount > 0}
-                containerClassName="mx-2"
-              />
-              {!live && (
+              <div className="flex items-center h-full">
                 <ControlButton
                   disabled={disabled && !inspectorMode}
-                  onClick={() => toggleBottomTools(NETWORK)}
-                  active={bottomBlock === NETWORK && !inspectorMode}
-                  label="NETWORK"
-                  hasErrors={resourceRedCount > 0}
+                  onClick={() => {
+                    if (this.state.perm) {
+                      toggleBottomTools(CONSOLE);
+                    } else {
+                      document.getElementById('modalId_p').setAttribute('data', true);
+                    }
+                  }}
+                  active={bottomBlock === CONSOLE && !inspectorMode}
+                  label="CONSOLE"
                   noIcon
                   labelClassName="!text-base font-semibold"
+                  count={logCount}
+                  hasErrors={logRedCount > 0}
                   containerClassName="mx-2"
                 />
-              )}
-              {!live && (
-                <ControlButton
-                  disabled={disabled && !inspectorMode}
-                  onClick={() => toggleBottomTools(PERFORMANCE)}
-                  active={bottomBlock === PERFORMANCE && !inspectorMode}
-                  label="PERFORMANCE"
-                  noIcon
-                  labelClassName="!text-base font-semibold"
-                  containerClassName="mx-2"
-                />
-              )}
-              {showFetch && (
-                <ControlButton
-                  disabled={disabled && !inspectorMode}
-                  onClick={() => toggleBottomTools(FETCH)}
-                  active={bottomBlock === FETCH && !inspectorMode}
-                  hasErrors={fetchRedCount > 0}
-                  count={fetchCount}
-                  label="FETCH"
-                  noIcon
-                  labelClassName="!text-base font-semibold"
-                  containerClassName="mx-2"
-                />
-              )}
-              {!live && showGraphql && (
-                <ControlButton
-                  disabled={disabled && !inspectorMode}
-                  onClick={() => toggleBottomTools(GRAPHQL)}
-                  active={bottomBlock === GRAPHQL && !inspectorMode}
-                  count={graphqlCount}
-                  label="GRAPHQL"
-                  noIcon
-                  labelClassName="!text-base font-semibold"
-                  containerClassName="mx-2"
-                />
-              )}
-              {!live && showStorage && (
-                <ControlButton
-                  disabled={disabled && !inspectorMode}
-                  onClick={() => toggleBottomTools(STORAGE)}
-                  active={bottomBlock === STORAGE && !inspectorMode}
-                  count={storageCount}
-                  label={getStorageName(storageType)}
-                  noIcon
-                  labelClassName="!text-base font-semibold"
-                  containerClassName="mx-2"
-                />
-              )}
-              {showExceptions && (
-                <ControlButton
-                  disabled={disabled && !inspectorMode}
-                  onClick={() => toggleBottomTools(EXCEPTIONS)}
-                  active={bottomBlock === EXCEPTIONS && !inspectorMode}
-                  label="EXCEPTIONS"
-                  noIcon
-                  labelClassName="!text-base font-semibold"
-                  containerClassName="mx-2"
-                  count={exceptionsCount}
-                  hasErrors={exceptionsCount > 0}
-                />
-              )}
-              {!live && showStack && (
-                <ControlButton
-                  disabled={disabled && !inspectorMode}
-                  onClick={() => toggleBottomTools(STACKEVENTS)}
-                  active={bottomBlock === STACKEVENTS && !inspectorMode}
-                  label="EVENTS"
-                  noIcon
-                  labelClassName="!text-base font-semibold"
-                  containerClassName="mx-2"
-                  count={stackCount}
-                  hasErrors={stackRedCount > 0}
-                />
-              )}
-              {!live && showProfiler && (
-                <ControlButton
-                  disabled={disabled && !inspectorMode}
-                  onClick={() => toggleBottomTools(PROFILER)}
-                  active={bottomBlock === PROFILER && !inspectorMode}
-                  count={profilesCount}
-                  label="PROFILER"
-                  noIcon
-                  labelClassName="!text-base font-semibold"
-                  containerClassName="mx-2"
-                />
-              )}
-              {!live && (
-                <Tooltip title="Fullscreen" delay={0} position="top-end" className="mx-4">
-                  {this.controlIcon(
-                    'arrows-angle-extend',
-                    16,
-                    this.props.fullscreenOn,
-                    false,
-                    'rounded hover:bg-gray-light-shade color-gray-medium'
-                  )}
-                </Tooltip>
-              )}
+                {!live && (
+                  <ControlButton
+                    disabled={disabled && !inspectorMode}
+                    onClick={() => {
+                      if (this.state.perm) {
+                        toggleBottomTools(NETWORK);
+                      } else {
+                        document.getElementById('modalId_p').setAttribute('data', true);
+                      }
+                    }}
+                    active={bottomBlock === NETWORK && !inspectorMode}
+                    label="NETWORK"
+                    hasErrors={resourceRedCount > 0}
+                    noIcon
+                    labelClassName="!text-base font-semibold"
+                    containerClassName="mx-2"
+                  />
+                )}
+                {!live && (
+                  <ControlButton
+                    disabled={disabled && !inspectorMode}
+                    onClick={() => {
+                      if (this.state.perm) {
+                        toggleBottomTools(PERFORMANCE);
+                      } else {
+                        document.getElementById('modalId_p').setAttribute('data', true);
+                      }
+                    }}
+                    active={bottomBlock === PERFORMANCE && !inspectorMode}
+                    label="PERFORMANCE"
+                    noIcon
+                    labelClassName="!text-base font-semibold"
+                    containerClassName="mx-2"
+                  />
+                )}
+                {showFetch && (
+                  <ControlButton
+                    disabled={disabled && !inspectorMode}
+                    onClick={() => toggleBottomTools(FETCH)}
+                    active={bottomBlock === FETCH && !inspectorMode}
+                    hasErrors={fetchRedCount > 0}
+                    count={fetchCount}
+                    label="FETCH"
+                    noIcon
+                    labelClassName="!text-base font-semibold"
+                    containerClassName="mx-2"
+                  />
+                )}
+                {!live && showGraphql && (
+                  <ControlButton
+                    disabled={disabled && !inspectorMode}
+                    onClick={() => toggleBottomTools(GRAPHQL)}
+                    active={bottomBlock === GRAPHQL && !inspectorMode}
+                    count={graphqlCount}
+                    label="GRAPHQL"
+                    noIcon
+                    labelClassName="!text-base font-semibold"
+                    containerClassName="mx-2"
+                  />
+                )}
+                {!live && showStorage && (
+                  <ControlButton
+                    disabled={disabled && !inspectorMode}
+                    onClick={() => {
+                      if (this.state.perm) {
+                        toggleBottomTools(STORAGE);
+                      } else {
+                        document.getElementById('modalId_p').setAttribute('data', true);
+                      }
+                    }}
+                    active={bottomBlock === STORAGE && !inspectorMode}
+                    count={storageCount}
+                    label={getStorageName(storageType)}
+                    noIcon
+                    labelClassName="!text-base font-semibold"
+                    containerClassName="mx-2"
+                  />
+                )}
+                {showExceptions && (
+                  <ControlButton
+                    disabled={disabled && !inspectorMode}
+                    onClick={() => toggleBottomTools(EXCEPTIONS)}
+                    active={bottomBlock === EXCEPTIONS && !inspectorMode}
+                    label="EXCEPTIONS"
+                    noIcon
+                    labelClassName="!text-base font-semibold"
+                    containerClassName="mx-2"
+                    count={exceptionsCount}
+                    hasErrors={exceptionsCount > 0}
+                  />
+                )}
+                {!live && showProfiler && (
+                  <ControlButton
+                    disabled={disabled && !inspectorMode}
+                    onClick={() => toggleBottomTools(PROFILER)}
+                    active={bottomBlock === PROFILER && !inspectorMode}
+                    count={profilesCount}
+                    label="PROFILER"
+                    noIcon
+                    labelClassName="!text-base font-semibold"
+                    containerClassName="mx-2"
+                  />
+                )}
+                {!live && (
+                  <Tooltip title="Fullscreen" delay={0} position="top-end" className="mx-4">
+                    {this.controlIcon(
+                      'arrows-angle-extend',
+                      16,
+                      this.props.fullscreenOn,
+                      false,
+                      'rounded hover:bg-gray-light-shade color-gray-medium'
+                    )}
+                  </Tooltip>
+                )}
+              </div>
             </div>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      </>
     );
   }
 }

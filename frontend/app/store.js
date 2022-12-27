@@ -7,22 +7,31 @@ import LocalStorage from './local_storage';
 
 const storage = new LocalStorage({
   jwt: String,
+  permission: Boolean,
 });
 
-const composeEnhancers = window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ && window.env.NODE_ENV === "development" 
-  ? window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ : compose;
+const composeEnhancers =
+  window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ && window.env.NODE_ENV === 'development'
+    ? window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__
+    : compose;
 
 const storageState = storage.state();
 const initialState = Map({
   jwt: storageState.jwt,
+  permission: storageState.permission,
   // TODO: store user
 });
 
-const store = createStore(indexReducer, initialState, composeEnhancers(applyMiddleware(thunk, apiMiddleware)));
+const store = createStore(
+  indexReducer,
+  initialState,
+  composeEnhancers(applyMiddleware(thunk, apiMiddleware))
+);
 store.subscribe(() => {
   const state = store.getState();
   storage.sync({
-    jwt: state.get('jwt')
+    jwt: state.get('jwt'),
+    permission: state.get('permission'),
   });
 });
 
