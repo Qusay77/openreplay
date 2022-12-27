@@ -72,8 +72,9 @@ export default class Event extends React.PureComponent {
     }
     const isLocation = event.type === TYPES.LOCATION;
     const isClickrage = event.type === TYPES.CLICKRAGE;
+    const customInfo = event._values._tail.array.find((e) => e && (e.title || e.details));
     const isCustom =
-      event.type === TYPES.CUSTOM && event.payload.details.isOk !== undefined
+      event.type === TYPES.CUSTOM && customInfo?.details?.isOk !== undefined
         ? event.payload.details.isOk
           ? 'Goal_Success'
           : 'Goal_Failure'
@@ -145,7 +146,10 @@ export default class Event extends React.PureComponent {
       presentInSearch = false,
     } = this.props;
     const { menuOpen } = this.state;
-    const info = event.payload;
+    const info =
+      event.type === TYPES.CUSTOM
+        ? event._values._tail.array.find((e) => e && (e.title || e.details))
+        : event.payload;
     return (
       <div
         ref={(ref) => {
@@ -165,6 +169,7 @@ export default class Event extends React.PureComponent {
           [cls.clickrageType]: event.type === TYPES.CLICKRAGE,
           [cls.highlight]: presentInSearch,
         })}
+        style={!info ? { display: 'none' } : {}}
         onClick={onClick}
       >
         {menuOpen && (
@@ -173,7 +178,7 @@ export default class Event extends React.PureComponent {
           </button>
         )}
         <div className={cls.topBlock}>
-          {(event.type === TYPES.CUSTOM && Object.entries(info.details).length) ||
+          {(event.type === TYPES.CUSTOM && info) ||
           (event.type === TYPES.LOCATION &&
             (event.fcpTime || event.visuallyComplete || event.timeToInteractive)) ? (
             <div
@@ -201,7 +206,7 @@ export default class Event extends React.PureComponent {
             <div className={cls.firstLine}>{this.renderBody()}</div>
           )}
         </div>
-        {event.type === TYPES.CUSTOM && (
+        {event.type === TYPES.CUSTOM && info && (
           <CustomInfo showInfo={showLoadInfo} onClick={toggleLoadInfo} event={event} />
         )}
         {event.type === TYPES.LOCATION &&

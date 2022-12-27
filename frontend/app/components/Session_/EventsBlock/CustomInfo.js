@@ -44,6 +44,7 @@ const CustomInfo = ({ event, showInfo, onClick }) => {
                 style={{
                   display: 'flex',
                   flexDirection: 'row',
+                  alignContent: 'center',
                 }}
               >
                 <p style={{ fontWeight: 'bold' }}>{textObj[k]}</p>:&nbsp;

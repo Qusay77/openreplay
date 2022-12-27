@@ -94,6 +94,8 @@ class EventGroupWrapper extends React.PureComponent {
             event={event}
             onClick={this.onEventClick}
             onCheckboxClick={this.onCheckboxClick}
+            toggleLoadInfo={this.toggleLoadInfo}
+            showLoadInfo={showLoadInfo}
             selected={isSelected}
             isCurrent={isCurrent}
             showSelection={showSelection}
