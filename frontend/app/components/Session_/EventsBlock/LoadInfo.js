@@ -8,38 +8,40 @@ const LoadInfo = ({
   onClick,
   event: { fcpTime, visuallyComplete, timeToInteractive },
   prorata: { a, b, c },
-}) => (
-  <div>
-    <div className={styles.bar} onClick={onClick}>
-      {typeof fcpTime === 'number' && <div style={{ width: `${a}%` }} />}
-      {typeof visuallyComplete === 'number' && <div style={{ width: `${b}%` }} />}
-      {typeof timeToInteractive === 'number' && <div style={{ width: `${c}%` }} />}
+}) => {
+  return (
+    <div>
+      <div className={styles.bar} onClick={onClick}>
+        {typeof fcpTime === 'number' && <div style={{ width: `${a}%` }} />}
+        {typeof visuallyComplete === 'number' && <div style={{ width: `${b}%` }} />}
+        {typeof timeToInteractive === 'number' && <div style={{ width: `${c}%` }} />}
+      </div>
+      <div className={styles.bottomBlock} data-hidden={!showInfo}>
+        {typeof fcpTime === 'number' && (
+          <div onClick={(e) => timeClick(e, fcpTime)} className={styles.wrapper}>
+            <div className={styles.lines} />
+            <div className={styles.label}>{'Time to Render'}</div>
+            <div className={styles.value}>{`${numberWithCommas(fcpTime || 0)}ms`}</div>
+          </div>
+        )}
+        {typeof visuallyComplete === 'number' && (
+          <div onClick={(e) => timeClick(e, visuallyComplete)} className={styles.wrapper}>
+            <div className={styles.lines} />
+            <div className={styles.label}>{'Visually Complete'}</div>
+            <div className={styles.value}>{`${numberWithCommas(visuallyComplete || 0)}ms`}</div>
+          </div>
+        )}
+        {typeof timeToInteractive === 'number' && (
+          <div onClick={(e) => timeClick(e, timeToInteractive)} className={styles.wrapper}>
+            <div className={styles.lines} />
+            <div className={styles.label}>{'Time To Interactive'}</div>
+            <div className={styles.value}>{`${numberWithCommas(timeToInteractive || 0)}ms`}</div>
+          </div>
+        )}
+      </div>
     </div>
-    <div className={styles.bottomBlock} data-hidden={!showInfo}>
-      {typeof fcpTime === 'number' && (
-        <div onClick={(e) => timeClick(e, fcpTime)} className={styles.wrapper}>
-          <div className={styles.lines} />
-          <div className={styles.label}>{'Time to Render'}</div>
-          <div className={styles.value}>{`${numberWithCommas(fcpTime || 0)}ms`}</div>
-        </div>
-      )}
-      {typeof visuallyComplete === 'number' && (
-        <div onClick={(e) => timeClick(e, visuallyComplete)} className={styles.wrapper}>
-          <div className={styles.lines} />
-          <div className={styles.label}>{'Visually Complete'}</div>
-          <div className={styles.value}>{`${numberWithCommas(visuallyComplete || 0)}ms`}</div>
-        </div>
-      )}
-      {typeof timeToInteractive === 'number' && (
-        <div onClick={(e) => timeClick(e, timeToInteractive)} className={styles.wrapper}>
-          <div className={styles.lines} />
-          <div className={styles.label}>{'Time To Interactive'}</div>
-          <div className={styles.value}>{`${numberWithCommas(timeToInteractive || 0)}ms`}</div>
-        </div>
-      )}
-    </div>
-  </div>
-);
+  );
+};
 
 LoadInfo.displayName = 'LoadInfo';
 

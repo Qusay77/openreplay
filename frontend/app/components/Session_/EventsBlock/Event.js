@@ -119,11 +119,6 @@ export default class Event extends React.PureComponent {
           <div className="mt-1">
             <span
               onClick={() => {
-                console.log({
-                  referrer: event.referrer,
-                  host: event.host,
-                  url: event.url,
-                });
                 const url = `https://${event.host}${event.url}`;
                 window.open(url, '_blank');
               }}

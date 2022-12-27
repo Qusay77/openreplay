@@ -131,6 +131,7 @@ export default class EventsBlock extends React.PureComponent {
   }
 
   onEventClick = (e, event) => {
+    console.log(event.time);
     this.props.player.jump(event.time - 2000 < 0 ? 0 : event.time - 2000);
   };
 
