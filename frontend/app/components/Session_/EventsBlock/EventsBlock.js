@@ -36,14 +36,13 @@ export default class EventsBlock extends React.PureComponent {
       pages: true,
       Interactions: false,
     },
+    cache: new CellMeasurerCache({
+      fixedWidth: true,
+      defaultHeight: 300,
+    }),
   };
 
   scroller = React.createRef();
-  cache = new CellMeasurerCache({
-    fixedWidth: true,
-    defaultHeight: 300,
-  });
-
   write = ({ target: { value, name } }) => {
     const { filter } = this.state;
     this.setState({ query: value });
@@ -77,15 +76,17 @@ export default class EventsBlock extends React.PureComponent {
     this.props.setEventFilter({ filter: value, query });
   };
 
-  componentDidUpdate(prevProps) {
+  componentDidUpdate(prevProps, prevState) {
     if (prevProps.targetDefinerDisplayed && !this.props.targetDefinerDisplayed) {
       this.setState({ editingEvent: null });
     }
-    if (prevProps.session !== this.props.session) {
+    if (prevState.filterType != this.state.filterType) {
       // Doesn't happen
-      this.cache = new CellMeasurerCache({
-        fixedWidth: true,
-        defaultHeight: 300,
+      this.setState({
+        cache: new CellMeasurerCache({
+          fixedWidth: true,
+          defaultHeight: 300,
+        }),
       });
     }
     if (
@@ -165,7 +166,7 @@ export default class EventsBlock extends React.PureComponent {
     const isCurrent = index === currentTimeEventIndex;
     const isEditing = this.state.editingEvent === event;
     return (
-      <CellMeasurer key={key} cache={this.cache} parent={parent} rowIndex={index}>
+      <CellMeasurer key={key} cache={this.state.cache} parent={parent} rowIndex={index}>
         {({ measure, registerChild }) => (
           <div style={style} ref={registerChild}>
             <EventGroupWrapper
@@ -284,8 +285,8 @@ export default class EventsBlock extends React.PureComponent {
                 overscanRowCount={6}
                 itemSize={230}
                 rowCount={_events.size}
-                deferredMeasurementCache={this.cache}
-                rowHeight={this.cache.rowHeight}
+                deferredMeasurementCache={this.state.cache}
+                rowHeight={this.state.cache.rowHeight}
                 rowRenderer={(d) => this.renderGroup(d, this.state.filterType)}
                 scrollToAlignment="start"
               />
